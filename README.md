@@ -24,12 +24,16 @@ A modern React application to search and explore movies using the OMDB API. User
 - OMDB API
 
 ---
+How to get your API key:
+Go to: https://www.omdbapi.com/apikey.aspx
 
-##  Getting Started
+Register for a free plan with your email
 
-1. **Clone the repository**
+Receive your API key via email
 
-```bash
-git clone https://github.com/yourusername/movie-search-app.git
-cd movie-search-app
+Add it to your .env file as:
+
+VITE_OMDB_API_KEY=your_api_key_here
+
+
 
