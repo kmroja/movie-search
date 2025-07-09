@@ -10,16 +10,19 @@ export default function Home() {
   const [page, setPage] = useState(1);
   const [loading, setLoading] = useState(false);
   const [hasMore, setHasMore] = useState(true);
+  const [error, setError] = useState("");
+  const [type, setType] = useState("movie");
   const resultsRef = useRef(null);
 
   useEffect(() => {
-    fetchMovies(query, 1);
-  }, [query]);
+    fetchMovies(query, 1, type);
+  }, [query, type]);
 
-  const fetchMovies = async (search, pageNum) => {
+  const fetchMovies = async (search, pageNum, filterType) => {
     try {
       setLoading(true);
-      const data = await searchMovies(search, pageNum);
+      setError("");
+      const data = await searchMovies(search, pageNum, filterType);
       if (data.Response === "True") {
         if (pageNum === 1) {
           setMovies(data.Search);
@@ -29,10 +32,11 @@ export default function Home() {
         setHasMore(data.Search.length > 0);
       } else {
         setHasMore(false);
+        setError(data.Error || "No results found.");
         if (pageNum === 1) setMovies([]);
       }
     } catch (err) {
-      console.error("Failed to fetch movies", err);
+      setError("Something went wrong. Please try again later.");
     } finally {
       setLoading(false);
     }
@@ -56,7 +60,7 @@ export default function Home() {
     ) {
       const nextPage = page + 1;
       setPage(nextPage);
-      fetchMovies(query, nextPage);
+      fetchMovies(query, nextPage, type);
     }
   };
 
@@ -65,19 +69,39 @@ export default function Home() {
     return () => window.removeEventListener("scroll", handleScroll);
   });
 
+  const handleTypeChange = (e) => {
+    setType(e.target.value);
+    setPage(1);
+  };
+
   return (
     <div className="bg-gray-950 min-h-screen text-white">
       <SearchBar onSearch={handleSearch} />
 
       <HeroSlider />
 
-      <div ref={resultsRef} className="px-6 py-10">
-        <h2 className="text-2xl font-bold mb-6 text-pink-500">Search Results</h2>
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-6">
+      <div className="px-6 pt-8">
+        <div className="mb-6 flex justify-between items-center">
+          <h2 className="text-2xl font-bold text-pink-500">Search Results</h2>
+          <select
+            value={type}
+            onChange={handleTypeChange}
+            className="bg-gray-800 text-white p-2 rounded shadow border border-gray-600"
+          >
+            <option value="movie">Movie</option>
+            <option value="series">Series</option>
+            <option value="episode">Episode</option>
+          </select>
+        </div>
+
+        {error && <p className="text-red-500 text-center mb-4">{error}</p>}
+
+        <div ref={resultsRef} className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-6">
           {movies.map((movie) => (
             <MovieCard key={movie.imdbID} movie={movie} />
           ))}
         </div>
+
         {loading && <p className="text-center mt-6">Loading more movies...</p>}
         {!hasMore && !loading && movies.length > 0 && (
           <p className="text-center mt-6 text-gray-400">No more results.</p>
